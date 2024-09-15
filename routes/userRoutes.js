@@ -30,24 +30,27 @@ router.post('/login', ipLogger, async (req, res) => {
 
   router.get('/logout', authenticateToken, async (req, res) => {
     try {
-        // Find the user
-        const user = await User.findById(req.user._id); // Ensure `req.user` is correctly populated
-        if (!user) return res.status(404).send({ message: 'User not found' });
+        const user = await User.findById(req.user.id); // Use the correct field in req.user (e.g., `id`)
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
 
         // Update user session with logout time
         if (user.sessions.length > 0) {
             const lastSession = user.sessions[user.sessions.length - 1];
             lastSession.logoutTime = new Date(); // Update the last session
         }
+
         await user.save();
 
-        // Clear session cookies or any session-related data if necessary
-        res.clearCookie('connect.sid', { path: '/' }); // Adjust as needed
+        // Clear cookies if needed
+        res.clearCookie('connect.sid', { path: '/' });
         res.status(200).send('Logged out successfully');
     } catch (error) {
         res.status(500).send({ message: 'Server error', error: error.message });
     }
 });
+
 
 
 
